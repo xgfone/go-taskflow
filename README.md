@@ -1,9 +1,10 @@
-# go-taskflow
-A task flow in Go, you can use it to do and undo.
+# go-taskflow [![Build Status](https://travis-ci.org/xgfone/go-taskflow.svg?branch=master)](https://travis-ci.org/xgfone/go-taskflow) [![GoDoc](https://godoc.org/github.com/xgfone/go-taskflow?status.svg)](https://pkg.go.dev/github.com/xgfone/go-taskflow) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square)](https://raw.githubusercontent.com/xgfone/go-taskflow/master/LICENSE)
+
+A task flow in Go, you can use it to do and undo the tasks.
 
 ## Installation
 ```shell
-$ go get github.com/xgfone/go-taskflow
+$ go get -u github.com/xgfone/go-taskflow
 ```
 
 ## Example
@@ -11,79 +12,96 @@ $ go get github.com/xgfone/go-taskflow
 package main
 
 import (
-    "fmt"
+	"context"
+	"fmt"
 
-    "github.com/xgfone/go-taskflow"
+	"github.com/xgfone/go-taskflow"
 )
 
-type Task string
-
-func (self Task) Do() bool {
-    fmt.Println("Do " + self)
-    return true
+func logf(msg string, args ...interface{}) error {
+	fmt.Printf(msg+"\n", args...)
+	return nil
 }
 
-func (self Task) Undo() bool {
-    fmt.Println("Undo " + self)
-    return true
+func do(n string) taskflow.TaskFunc {
+	return func(context.Context) error { return logf("do the task '%s'", n) }
 }
 
-func do1() bool {
-    fmt.Println("Do1")
-    return true
+func undo(n string) taskflow.TaskFunc {
+	return func(context.Context) error { return logf("undo the task '%s'", n) }
 }
 
-func undo1() bool {
-    fmt.Println("Undo1")
-    return true
+func failDo(n string) taskflow.TaskFunc {
+	return func(context.Context) error {
+		logf("do the task '%s'", n)
+		return fmt.Errorf("failure")
+	}
 }
 
-func do2() bool {
-    fmt.Println("Do2")
-    return false
+func newTask(n string) taskflow.Task {
+	return taskflow.NewTask(n, do(n), undo(n))
 }
 
-func undo2() bool {
-    fmt.Println("Undo2")
-    return false
-}
-
-func do3() bool {
-    fmt.Println("Do3")
-    return true
-}
-
-func undo3() bool {
-    fmt.Println("Undo3")
-    return false
+func newFailTask(n string) taskflow.Task {
+	return taskflow.NewTask(n, failDo(n), undo(n))
 }
 
 func main() {
-    flow := taskflow.NewLineFlow()
-    flow.Retry = 1
+	flow1 := taskflow.NewLineFlow("lineflow1")
+	flow1.
+		BeforeDo(func() { logf("do the task '%s'", flow1.Name()) }).
+		AfterUndo(func() { logf("undo the task '%s'", flow1.Name()) }).
+		Add(
+			newTask("task1"),
+			newTask("task2"),
+			newTask("task3"),
+		)
 
-    task1 := taskflow.Tasker{DoF: do1, UndoF: undo1}
-    task2 := taskflow.Tasker{DoF: do2, UndoF: undo2}
-    task3 := taskflow.Tasker{DoF: do3, UndoF: undo3}
-    var task Task = "task"
+	flow2 := taskflow.NewLineFlow("lineflow2")
+	flow2.
+		BeforeDo(func() { logf("do the task '%s'", flow2.Name()) }).
+		AfterUndo(func() { logf("undo the task '%s'", flow2.Name()) }).
+		Add(
+			newTask("task4"),
+			newFailTask("task5"),
+			newTask("task6"),
+		)
 
-    flow.Add(task1).Add(task).Add(task2).Add(task3)
-    if err := flow.Execute(); err != nil {
-        if err == taskflow.DoError {
-            fmt.Println("DoError")
-        } else if err == taskflow.UndoError {
-            fmt.Println("UndoError")
-        }
-    } else {
-        fmt.Println("Successfully")
-    }
+	flow3 := taskflow.NewLineFlow("lineflow3")
+	flow3.
+		BeforeDo(func() { logf("do the task '%s'", flow3.Name()) }).
+		AfterUndo(func() { logf("undo the task '%s'", flow3.Name()) }).
+		Add(
+			newTask("task7"),
+			flow1,
+			newTask("task8"),
+			flow2,
+			newTask("task9"),
+		)
+
+	err := flow3.Do(context.Background())
+	fmt.Println(err)
+
+	// Output:
+	// do the task 'lineflow3'
+	// do the task 'task7'
+	// do the task 'lineflow1'
+	// do the task 'task1'
+	// do the task 'task2'
+	// do the task 'task3'
+	// do the task 'task8'
+	// do the task 'lineflow2'
+	// do the task 'task4'
+	// do the task 'task5'
+	// undo the task 'task4'
+	// undo the task 'lineflow2'
+	// undo the task 'task8'
+	// undo the task 'task3'
+	// undo the task 'task2'
+	// undo the task 'task1'
+	// undo the task 'lineflow1'
+	// undo the task 'task7'
+	// undo the task 'lineflow3'
+	// FlowError(name=lineflow3, do=FlowError(name=lineflow2, do=TaskError(name=task5, err=failure)))
 }
-// # Output:
-// Do1
-// Do task
-// Do2
-// Do2
-// Undo task
-// Undo1
-// DoError
 ```
