@@ -39,7 +39,7 @@ func ExampleUnorderedFlow() {
 	flow1 := NewUnorderedFlow("unorderedflow1")
 	flow1.
 		BeforeDo(func() { logf("do the task '%s'", flow1.Name()) }).
-		Add(
+		AddTasks(
 			newTask("task1"),
 			newTask("task2"),
 			newTask("task3"),
@@ -48,7 +48,7 @@ func ExampleUnorderedFlow() {
 	flow2 := NewUnorderedFlow("unorderedflow2")
 	flow2.
 		BeforeDo(func() { logf("do the task '%s'", flow2.Name()) }).
-		Add(
+		AddTasks(
 			newTask("task4"),
 			newFailTask("task5"),
 			newTask("task6"),
@@ -57,7 +57,7 @@ func ExampleUnorderedFlow() {
 	flow3 := NewUnorderedFlow("unorderedflow3")
 	flow3.
 		BeforeDo(func() { logf("do the task '%s'", flow3.Name()) }).
-		Add(
+		AddTasks(
 			newTask("task7"),
 			flow1,
 			newTask("task8"),

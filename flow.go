@@ -18,8 +18,8 @@ package taskflow
 type Flow interface {
 	Task
 
-	// Add adds a given Task/Flow into this flow.
-	Add(tasks ...Task)
+	// AddTasks adds a given Task/Flow into this flow.
+	AddTasks(tasks ...Task) Flow
 }
 
 // FlowBuilder is used to build the Flow.

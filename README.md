@@ -51,7 +51,7 @@ func main() {
 	flow1.
 		BeforeDo(func() { logf("do the task '%s'", flow1.Name()) }).
 		AfterUndo(func() { logf("undo the task '%s'", flow1.Name()) }).
-		Add(
+		AddTasks(
 			newTask("task1"),
 			newTask("task2"),
 			newTask("task3"),
@@ -61,7 +61,7 @@ func main() {
 	flow2.
 		BeforeDo(func() { logf("do the task '%s'", flow2.Name()) }).
 		AfterUndo(func() { logf("undo the task '%s'", flow2.Name()) }).
-		Add(
+		AddTasks(
 			newTask("task4"),
 			newFailTask("task5"),
 			newTask("task6"),
@@ -71,7 +71,7 @@ func main() {
 	flow3.
 		BeforeDo(func() { logf("do the task '%s'", flow3.Name()) }).
 		AfterUndo(func() { logf("undo the task '%s'", flow3.Name()) }).
-		Add(
+		AddTasks(
 			newTask("task7"),
 			flow1,
 			newTask("task8"),

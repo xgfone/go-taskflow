@@ -67,8 +67,8 @@ func (f *UnorderedFlow) GetCtx(key string) (value interface{}) {
 	return f.ctxs[key]
 }
 
-// Add adds the task or flow into the line flow.
-func (f *UnorderedFlow) Add(tasks ...Task) Flow {
+// AddTasks adds the task or flow into the line flow.
+func (f *UnorderedFlow) AddTasks(tasks ...Task) Flow {
 	f.tasks = append(f.tasks, tasks...)
 	return f
 }

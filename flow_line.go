@@ -67,8 +67,8 @@ func (f *LineFlow) SetCtx(key string, value interface{}) {
 // Return nil if the key does not exist.
 func (f *LineFlow) GetCtx(key string) (value interface{}) { return f.ctxs[key] }
 
-// Add adds the task or flow into the line flow.
-func (f *LineFlow) Add(tasks ...Task) Flow {
+// AddTasks adds the task or flow into the line flow.
+func (f *LineFlow) AddTasks(tasks ...Task) Flow {
 	if f.index > -1 {
 		panic("LineFlow: the tasks have been executed")
 	}
