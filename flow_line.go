@@ -19,11 +19,11 @@ import (
 	"fmt"
 )
 
-// NewLineFlow returns a new line flow, which executes the task in turn.
-func NewLineFlow(name string) *LineFlow { return &LineFlow{name: name, index: -1} }
+var _ Flow = &LineFlow{}
 
 // LineFlow is used to execute the tasks in turn.
 type LineFlow struct {
+	ctxs  map[string]interface{}
 	name  string
 	tasks []Task
 	index int
@@ -35,6 +35,9 @@ type LineFlow struct {
 	undoAll bool
 	fail    bool
 }
+
+// NewLineFlow returns a new line flow, which executes the task in turn.
+func NewLineFlow(name string) *LineFlow { return &LineFlow{name: name, index: -1} }
 
 func (f *LineFlow) String() string {
 	return fmt.Sprintf("LineFlow(name=%s)", f.name)
@@ -49,12 +52,28 @@ func (f *LineFlow) Tasks() []Task { return f.tasks }
 // DoneTasks returns all the done tasks.
 func (f *LineFlow) DoneTasks() []Task { return f.tasks[:f.index] }
 
+// SetCtx adds the key-value context to allow that the subsequent tasks access
+// it, which will override it if the key has existed.
+func (f *LineFlow) SetCtx(key string, value interface{}) {
+	if f.ctxs == nil {
+		f.ctxs = map[string]interface{}{key: value}
+	} else {
+		f.ctxs[key] = value
+	}
+}
+
+// GetCtx returns the value of the context named key.
+//
+// Return nil if the key does not exist.
+func (f *LineFlow) GetCtx(key string) (value interface{}) { return f.ctxs[key] }
+
 // Add adds the task or flow into the line flow.
-func (f *LineFlow) Add(tasks ...Task) {
+func (f *LineFlow) Add(tasks ...Task) Flow {
 	if f.index > -1 {
 		panic("LineFlow: the tasks have been executed")
 	}
 	f.tasks = append(f.tasks, tasks...)
+	return f
 }
 
 // SetUndoAllTasks sets whether to undo all the tasks or not

@@ -19,8 +19,11 @@ import (
 	"fmt"
 )
 
+var _ Flow = &UnorderedFlow{}
+
 // UnorderedFlow is used to execute the tasks in unordered turn.
 type UnorderedFlow struct {
+	ctxs  map[string]interface{}
 	name  string
 	tasks []Task
 	aundo func()
@@ -47,9 +50,27 @@ func (f *UnorderedFlow) Name() string { return f.name }
 // Tasks returns all the tasks.
 func (f *UnorderedFlow) Tasks() []Task { return f.tasks }
 
+// SetCtx adds the key-value context to allow that the subsequent tasks access
+// it, which will override it if the key has existed.
+func (f *UnorderedFlow) SetCtx(key string, value interface{}) {
+	if f.ctxs == nil {
+		f.ctxs = map[string]interface{}{key: value}
+	} else {
+		f.ctxs[key] = value
+	}
+}
+
+// GetCtx returns the value of the context named key.
+//
+// Return nil if the key does not exist.
+func (f *UnorderedFlow) GetCtx(key string) (value interface{}) {
+	return f.ctxs[key]
+}
+
 // Add adds the task or flow into the line flow.
-func (f *UnorderedFlow) Add(tasks ...Task) {
+func (f *UnorderedFlow) Add(tasks ...Task) Flow {
 	f.tasks = append(f.tasks, tasks...)
+	return f
 }
 
 // SetUndoAllTasks sets whether to undo all the tasks or not
