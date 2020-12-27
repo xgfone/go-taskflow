@@ -1,3 +1,3 @@
-module github.com/xgfone/taskflow
+module github.com/xgfone/go-taskflow
 
 go 1.11
