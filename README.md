@@ -1,6 +1,6 @@
-# go-taskflow [![Build Status](https://travis-ci.org/xgfone/go-taskflow.svg?branch=master)](https://travis-ci.org/xgfone/go-taskflow) [![GoDoc](https://godoc.org/github.com/xgfone/go-taskflow?status.svg)](https://pkg.go.dev/github.com/xgfone/go-taskflow) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square)](https://raw.githubusercontent.com/xgfone/go-taskflow/master/LICENSE)
+# go-taskflow [![Build Status](https://api.travis-ci.com/xgfone/go-taskflow.svg?branch=master)](https://travis-ci.com/github/xgfone/go-taskflow) [![GoDoc](https://pkg.go.dev/badge/github.com/xgfone/go-taskflow)](https://pkg.go.dev/github.com/xgfone/go-taskflow) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square)](https://raw.githubusercontent.com/xgfone/go-taskflow/master/LICENSE)
 
-A task flow in Go, you can use it to do and undo the tasks.
+A task flow supporting `Go1.7+`, you can use it to do and undo the tasks.
 
 ## Installation
 ```shell
