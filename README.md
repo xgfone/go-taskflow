@@ -49,8 +49,6 @@ func newFailTask(n string) taskflow.Task {
 func main() {
 	flow1 := taskflow.NewLineFlow("lineflow1")
 	flow1.
-		BeforeDo(func() { logf("do the task '%s'", flow1.Name()) }).
-		AfterUndo(func() { logf("undo the task '%s'", flow1.Name()) }).
 		AddTasks(
 			newTask("task1"),
 			newTask("task2"),
@@ -59,8 +57,6 @@ func main() {
 
 	flow2 := taskflow.NewLineFlow("lineflow2")
 	flow2.
-		BeforeDo(func() { logf("do the task '%s'", flow2.Name()) }).
-		AfterUndo(func() { logf("undo the task '%s'", flow2.Name()) }).
 		AddTasks(
 			newTask("task4"),
 			newFailTask("task5"),
@@ -68,11 +64,9 @@ func main() {
 		)
 
 	flow3 := taskflow.NewLineFlow("lineflow3")
+	flow3.AddTask("task7", do("task7"), undo("task7")) // Use task functions
 	flow3.
-		BeforeDo(func() { logf("do the task '%s'", flow3.Name()) }).
-		AfterUndo(func() { logf("undo the task '%s'", flow3.Name()) }).
 		AddTasks(
-			newTask("task7"),
 			flow1,
 			newTask("task8"),
 			flow2,
@@ -83,25 +77,19 @@ func main() {
 	fmt.Println(err)
 
 	// Output:
-	// do the task 'lineflow3'
 	// do the task 'task7'
-	// do the task 'lineflow1'
 	// do the task 'task1'
 	// do the task 'task2'
 	// do the task 'task3'
 	// do the task 'task8'
-	// do the task 'lineflow2'
 	// do the task 'task4'
 	// do the task 'task5'
 	// undo the task 'task4'
-	// undo the task 'lineflow2'
 	// undo the task 'task8'
 	// undo the task 'task3'
 	// undo the task 'task2'
 	// undo the task 'task1'
-	// undo the task 'lineflow1'
 	// undo the task 'task7'
-	// undo the task 'lineflow3'
-	// FlowError(name=lineflow3, do=FlowError(name=lineflow2, do=TaskError(name=task5, err=failure)))
+	// FlowError(name=lineflow3, errs=[FlowError(name=lineflow2, errs=[TaskError(name=task5, doerr=failure)])])
 }
 ```

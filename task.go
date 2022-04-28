@@ -1,4 +1,4 @@
-// Copyright 2020 xgfone
+// Copyright 2020~2022 xgfone
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,8 +24,8 @@ import (
 type Task interface {
 	fmt.Stringer
 	Name() string
-	Do(context.Context) error
 	Undo(context.Context) error
+	Do(context.Context) error
 }
 
 // UndoAll is used to undo all the tasks.
@@ -54,15 +54,15 @@ func NewTask(name string, do TaskFunc, undo ...TaskFunc) Task {
 
 type baseTask struct {
 	name string
-	do   TaskFunc
 	undo TaskFunc
+	do   TaskFunc
 }
 
 func undoNothing(context.Context) error         { return nil }
 func (t baseTask) String() string               { return fmt.Sprintf("Task(name=%s)", t.name) }
 func (t baseTask) Name() string                 { return t.name }
-func (t baseTask) Do(c context.Context) error   { return t.do(c) }
 func (t baseTask) Undo(c context.Context) error { return t.undo(c) }
+func (t baseTask) Do(c context.Context) error   { return t.do(c) }
 
 // LogTaskFunc returns a wrap function to create the LogTask.
 func LogTaskFunc(logf func(fmt string, args ...interface{})) func(Task) Task {
@@ -75,16 +75,17 @@ func NewLogTask(task Task, logf func(fmt string, args ...interface{})) Task {
 }
 
 type logTask struct {
-	Task
 	logf func(string, ...interface{})
+	Task
 }
 
 func (t logTask) Do(c context.Context) error {
-	t.logf("do the task '%s'", t.Name())
+	t.logf("doing the task named '%s'", t.Name())
 	return t.Task.Do(c)
 }
+
 func (t logTask) Undo(c context.Context) error {
-	t.logf("undo the task '%s'", t.Name())
+	t.logf("undoing the task named '%s'", t.Name())
 	return t.Task.Undo(c)
 }
 
@@ -95,9 +96,9 @@ func NewRetryTask(t Task, retryNum int, retryInterval time.Duration) Task {
 }
 
 type retryTask struct {
-	Task
-	number   int
 	interval time.Duration
+	number   int
+	Task
 }
 
 func (t retryTask) Do(c context.Context) error   { return t.retry(c, t.Task.Do) }
@@ -108,22 +109,26 @@ func (t retryTask) retry(c context.Context, f TaskFunc) (err error) {
 	}
 
 	for num := t.number; num > 0; num-- {
+		select {
+		case <-c.Done():
+			return
+		default:
+		}
+
 		if err = f(c); err == nil {
-			break
+			return
 		}
 
 		if t.interval > 0 {
-			t.wait(c)
+			timer := time.NewTimer(t.interval)
+			select {
+			case <-timer.C:
+			case <-c.Done():
+				timer.Stop()
+				return
+			}
 		}
 	}
 
 	return
-}
-func (t retryTask) wait(c context.Context) {
-	timer := time.NewTimer(t.interval)
-	defer timer.Stop()
-	select {
-	case <-c.Done():
-	case <-timer.C:
-	}
 }

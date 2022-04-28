@@ -1,4 +1,4 @@
-// Copyright 2020 xgfone
+// Copyright 2020~2022 xgfone
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,73 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package taskflow provides some tools to execute many tasks in a certain turn.
 package taskflow
 
 // Flow is used to execute the task by the certain relationship.
 type Flow interface {
+	// AddTasks adds a set of Tasks or Flows.
+	AddTasks(tasks ...Task)
+
 	Task
-
-	// AddTasks adds a given Task/Flow into this flow.
-	AddTasks(tasks ...Task) Flow
-}
-
-// FlowBuilder is used to build the Flow.
-type FlowBuilder struct {
-	fail       bool
-	undoAll    bool
-	concurrent bool
-
-	aundo func()
-	bundo func()
-	ado   func()
-	bdo   func()
-}
-
-// NewFlowBuilder returns a new FlowBuilder.
-func NewFlowBuilder() FlowBuilder {
-	return FlowBuilder{}
-}
-
-// Concurrent sets whether to do the tasks concurrently for UnorderedFlow.
-func (b FlowBuilder) Concurrent(t bool) FlowBuilder { b.concurrent = t; return b }
-
-// UndoFailedTask sets whether to undo the failed task or not for LineFlow.
-func (b FlowBuilder) UndoFailedTask(t bool) FlowBuilder { b.fail = t; return b }
-
-// SetUndoAllTasks sets whether to undo all the tasks or not
-// if the task has implemented the interface UndoAll.
-func (b FlowBuilder) SetUndoAllTasks(t bool) FlowBuilder { b.undoAll = t; return b }
-
-// BeforeDo executes the do function before executing the Do method.
-func (b FlowBuilder) BeforeDo(do func()) FlowBuilder { b.bdo = do; return b }
-
-// BeforeUndo executes the undo function before executing the Undo method.
-func (b FlowBuilder) BeforeUndo(undo func()) FlowBuilder { b.bundo = undo; return b }
-
-// AfterDo executes the do function after executing the Do method.
-func (b FlowBuilder) AfterDo(do func()) FlowBuilder { b.ado = do; return b }
-
-// AfterUndo executes the undo function after executing the Undo method.
-func (b FlowBuilder) AfterUndo(undo func()) FlowBuilder { b.aundo = undo; return b }
-
-// LineFlow creates a new LineFlow.
-func (b FlowBuilder) LineFlow(name string) *LineFlow {
-	return NewLineFlow(name).
-		BeforeDo(b.bdo).
-		BeforeUndo(b.bundo).
-		AfterDo(b.ado).
-		AfterUndo(b.aundo).
-		SetUndoAllTasks(b.undoAll).
-		UndoFailedTask(b.fail)
-}
-
-// UnorderedFlow creates a new UnorderedFlow.
-func (b FlowBuilder) UnorderedFlow(name string) *UnorderedFlow {
-	return NewUnorderedFlow(name).
-		BeforeDo(b.bdo).
-		BeforeUndo(b.bundo).
-		AfterDo(b.ado).
-		AfterUndo(b.aundo).
-		SetUndoAllTasks(b.undoAll).
-		Concurrent(b.concurrent)
 }
