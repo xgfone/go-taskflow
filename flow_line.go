@@ -25,6 +25,7 @@ var _ Flow = &LineFlow{}
 type LineFlow struct {
 	name  string
 	tasks []Task
+	errf  func(err error)
 
 	ctxs  map[string]interface{}
 	index int
@@ -82,8 +83,20 @@ func (f *LineFlow) AddTask(name string, do TaskFunc, undo ...TaskFunc) {
 	f.AddTasks(NewTask(name, do, undo...))
 }
 
+// SetErrorHandler sets the handler to handle it if there is an error.
+func (f *LineFlow) SetErrorHandler(handle func(err error)) {
+	f.errf = handle
+}
+
 // Do does the tasks, which undoes them if a certain task fails.
 func (f *LineFlow) Do(c context.Context) (err error) {
+	if err = f.do(c); err != nil && f.errf != nil {
+		f.errf(err)
+	}
+	return
+}
+
+func (f *LineFlow) do(c context.Context) (err error) {
 	f.index = 0
 	for i, end := 0, len(f.tasks); i < end; i++ {
 		task := f.tasks[i]

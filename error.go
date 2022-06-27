@@ -117,3 +117,17 @@ func (es *TaskErrors) Append(name string, doErr, undoErr error) {
 
 // AppendTaskError appends the task error.
 func (es *TaskErrors) AppendTaskError(e TaskError) { *es = append(*es, e) }
+
+// UnwrapFailedTaskDoError unwraps the original error returned by the failed task.
+func UnwrapFailedTaskDoError(err error) error {
+	switch e := err.(type) {
+	case FlowError:
+		return e.TaskErrors[0].DoErr()
+
+	case TaskError:
+		return e.DoErr()
+
+	default:
+		return err
+	}
+}
