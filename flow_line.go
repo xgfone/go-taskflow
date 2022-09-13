@@ -111,7 +111,7 @@ func (f *LineFlow) do(c context.Context) (err error) {
 			}
 
 			tname := task.Name()
-			tes := make(TaskErrors, 0, len(errs)+1)
+			tes := make(TaskErrors, 1, len(errs)+1)
 			tes[0] = NewTaskError(tname, err, nil)
 			for _, e := range errs {
 				if ename := e.Name(); ename == tname {
